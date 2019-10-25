@@ -1,0 +1,28 @@
+- name: LVThin "{{ vg }}/{{ tpool }}/backup"
+  lvol:
+    vg: "{{ vg }}"
+    thinpool: "{{ tpool }}"
+    lv: backup
+    size: "{{ backup_size }}"
+    shrink: no
+  when: thinpool.stat.islnk is defined and thinpool.stat.islnk
+
+- name: FS backup
+  filesystem:
+    fstype: ext4
+    resizefs: yes
+    dev: "/dev/{{ vg }}/backup"
+  when: thinpool.stat.islnk is defined and thinpool.stat.islnk
+
+- name: Mount /backup
+  mount:
+    name: /backup
+    src: "/dev/{{ vg }}/backup"
+    fstype: ext4
+    state: mounted
+  when: thinpool.stat.islnk is defined and thinpool.stat.islnk
+
+- name: Permission /backup
+  file:
+    path: /home
+    owner: "{{ admin }}"
